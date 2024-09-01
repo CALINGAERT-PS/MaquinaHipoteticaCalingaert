@@ -1,45 +1,36 @@
-// import static org.junit.jupiter.api.Assertions.assertEquals;
-
-// import org.junit.jupiter.api.Test;
 // import javax.swing.SwingUtilities;
+
 public class Main {
   public static void main(String[] args) {
-   /* System.out.println("Hello world!");
+    /*
+      SwingUtilities.invokeLater(() -> {
+              InterfaceGrafica tela = new InterfaceGrafica();
+              tela.setVisible(true);
+          });
+      }
+    */
+    Vm vm = new Vm();
 
-    SwingUtilities.invokeLater(() -> {
-            InterfaceGrafica tela = new InterfaceGrafica();
-            tela.setVisible(true);
-        });
-    }
-  */
-  Vm vm = new Vm();
+    short[] program = {
+        3, 8,   // LOAD 0
+        2, 9,   // ADD 1
+        7, 9,   // STORE 2
+        11      // STOP
+    };
 
+    // Carregar o programa na memória
+    vm.loadProgram(program);
+    // Configura o modo de operação
+    vm.setMop((byte) 1);
 
-  short[] program = {
-      3, 8,   // LOAD 0
-      2, 9,   // ADD 1
-      7, 9,   // STORE 2
-      11      // STOP
-  };
+    // Carregar valores em memória para os testes
+    vm.setMemoryValue(8, (short) 5);   // Valor para LOAD
+    vm.setMemoryValue(9, (short) 10);  // Valor a ser adicionado
 
-  // Carregar o programa na memória
-  for (int i = 0; i < program.length; i++) {
-      vm.memoria[i] = program[i];
+    // Executar o programa
+    vm.run();
+
+    // Verificar o resultado
+    System.out.println("Memória[10]: " + vm.getMemoryValue((short) 10) ); // Esperado: 15
   }
-
-  // Carregar valores em memória para os testes
-  vm.memoria[8] = 5;   // Valor para LOAD
-  vm.memoria[9] = 10;  // Valor a ser adicionado
-
-  // Executar o programa
-  vm.run();
-
-  // Verificar o resultado
-  System.out.println("Memória[10]: " + vm.memoria[10]); // Esperado: 15
-
-  // @Test
-  // void addition() {
-  //     assertEquals(2, 1 + 1);
-  // }
-}
 }

@@ -1,16 +1,18 @@
 public class Vm {
-    public short[] memoria;
-    private short[] pilha;
+    private short[] memory;
+    private short[] stack;
     private short pc;
     private short sp;
     private short acc;
     private byte mop;
     private short ri;
     private short re;
+    private final int MEMORY_SIZE = 1014;
+    private final int STACK_SIZE = 10;
 
     public Vm() {
-        this.memoria = new short[1014];
-        this.pilha = new short[10];
+        this.memory = new short[MEMORY_SIZE];
+        this.stack = new short[STACK_SIZE];
         this.pc = 0;
         this.sp = 0;
         this.acc = 0;
@@ -21,47 +23,54 @@ public class Vm {
 
     private short fetchOperand(int mode, short operand) {
         switch (mode) {
-            case 0: // DIRETO
-                return memoria[operand];
-            case 1: // INDIRETO
-                return memoria[memoria[operand]];
-            case 4: // IMEDIATO
+            case 0: // Direto
+                return memory[operand];
+            case 1: // Indireto
+                return memory[memory[operand]];
+            case 4: // Imediato
                 return operand;
             default:
                 throw new IllegalArgumentException("Modo de enderaçamento inválido");
         }
     }
 
+    // Carrega o programa na memória
+    public void loadProgram(short program[]) {
+        for (int i = 0; i < program.length; i++) {
+            setMemoryValue(i, program[i]);
+        }
+    }
+
     public boolean executeInstruction() {
-        ri = memoria[pc];
-        int opcode = ri & 0x1F; // Bits 0 a 4 determinam o opcode
-        int mode = (ri >> 5) & 0x7; // Bits 5 a 7 determinam o modo de endereÃ§amento
+        ri = memory[pc];
+        int opcode = ri & 0x1F;     // Bits 0 a 4 determinam o opcode
+        int mode = (ri >> 5) & 0x7; // Bits 5 a 7 determinam o modo de endereçamento
 
         switch (opcode) {
             case 2: // ADD
-                acc += fetchOperand(mode, memoria[pc + 1]);
+                acc += fetchOperand(mode, memory[pc + 1]);
                 pc += 2;
                 break;
             case 0: // BR
-                pc = fetchOperand(mode, memoria[pc + 1]);
+                pc = fetchOperand(mode, memory[pc + 1]);
                 break;
             case 5: // BRNEG
                 if (acc < 0) {
-                    pc = fetchOperand(mode, memoria[pc + 1]);
+                    pc = fetchOperand(mode, memory[pc + 1]);
                     break;
                 }
                 pc += 1;
                 break;
             case 1: // BRPOS
                 if (acc > 0) {
-                    pc = fetchOperand(mode, memoria[pc + 1]);
+                    pc = fetchOperand(mode, memory[pc + 1]);
                     break;
                 }
                 pc += 1;
                 break;
             case 4: // BRZERO
                 if (acc == 0) {
-                    pc = fetchOperand(mode, memoria[pc + 1]);
+                    pc = fetchOperand(mode, memory[pc + 1]);
                     break;
                 }
                 pc += 1;
@@ -71,44 +80,44 @@ public class Vm {
                     System.out.println("Error: Stack Overflow");
                     return false;
                 }
-                pilha[sp] = pc;
-                pc = fetchOperand(mode, memoria[pc + 1]);
+                stack[sp] = pc;
+                pc = fetchOperand(mode, memory[pc + 1]);
                 ++sp;
                 break;
             case 13: // COPY
-                re = fetchOperand(mode, memoria[pc + 1]);
-                memoria[re] = fetchOperand(mode, memoria[pc + 2]);
+                re = fetchOperand(mode, memory[pc + 1]);
+                memory[re] = fetchOperand(mode, memory[pc + 2]);
                 pc += 3;
                 break;
             case 10: // DIVIDE
-                re = fetchOperand(mode, memoria[pc + 1]);
+                re = fetchOperand(mode, memory[pc + 1]);
                 acc = (short) (acc / re);
                 pc += 2;
                 break;
             case 3: // LOAD
-                acc = fetchOperand(mode, memoria[pc + 1]);
+                acc = fetchOperand(mode, memory[pc + 1]);
                 pc += 2;
                 break;
             case 14: // MULT
-                re = fetchOperand(mode, memoria[pc + 1]);
+                re = fetchOperand(mode, memory[pc + 1]);
                 acc = (short) (acc * re);
                 pc += 2;
                 break;
             case 12: // READ
                 break;
             case 16: // RET
-                pc = pilha[sp];
+                pc = stack[sp];
                 --sp;
                 break;
             case 11: // STOP
                 return false;
             case 7: // STORE
-                re = fetchOperand(mode, memoria[pc + 1]);
-                memoria[re] = acc;
+                re = fetchOperand(mode, memory[pc + 1]);
+                memory[re] = acc;
                 pc += 2;
                 break;
             case 6: // SUB
-                re = fetchOperand(mode, memoria[pc + 1]);
+                re = fetchOperand(mode, memory[pc + 1]);
                 acc = (short) (acc - re);
                 pc += 2;
                 break;
@@ -137,12 +146,20 @@ public class Vm {
         return pc;
     }
 
-    public short[] getMemoria() {
-        return memoria;
+    public short[] getMemory() {
+        return memory;
     }
 
-    public short[] getPilha() {
-        return pilha;
+    public short getMemoryValue(int i) {
+        return memory[i];
+    }
+
+    public void setMemoryValue(int i, short value) {
+        memory[i] = value;
+    }
+
+    public short[] getStack() {
+        return stack;
     }
 
     public short getSp() {
@@ -162,7 +179,21 @@ public class Vm {
     }
 
     public void run() {
-        while (executeInstruction()) {
+        // Depende da interface para terminar a implementação
+        switch (mop) {
+            case 0:
+                // (0) modo contínuo sem interação com a interface (visual) de operação
+                while (executeInstruction());
+                break;
+            case 1:
+                // (1) modo contínuo interagindo com a interface de operação a cada ciclo de instrução
+                while (executeInstruction());
+                break;
+            case 2:
+                // (2) modo de depuração (passo a passo) interagindo com a interface de operação, que
+                // proporciona a execução de apenas uma instrução a cada comando da interface.
+                while (executeInstruction());
+                break;
         }
     }
 }
