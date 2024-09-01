@@ -9,8 +9,8 @@ public class Vm {
     private short re;
 
     public Vm() {
-        this.memoria = new short[1022];
-        this.pilha = new short[2];
+        this.memoria = new short[1014];
+        this.pilha = new short[10];
         this.pc = 0;
         this.sp = 0;
         this.acc = 0;
@@ -35,7 +35,7 @@ public class Vm {
     public boolean executeInstruction() {
         ri = memoria[pc];
         int opcode = ri & 0x1F; // Bits 0 a 4 determinam o opcode
-        int mode = (ri >> 5) & 0x7; // Bits 5 a 7 determinam o modo de endereçamento
+        int mode = (ri >> 5) & 0x7; // Bits 5 a 7 determinam o modo de endereÃ§amento
 
         switch (opcode) {
             case 2: // ADD
@@ -76,11 +76,13 @@ public class Vm {
                 ++sp;
                 break;
             case 13: // COPY
-                memoria[fetchOperand(mode, memoria[pc + 1])] = fetchOperand(mode, memoria[pc + 2]);
+                re = fetchOperand(mode, memoria[pc + 1]);
+                memoria[re] = fetchOperand(mode, memoria[pc + 2]);
                 pc += 3;
                 break;
             case 10: // DIVIDE
-                acc = (short) (acc / fetchOperand(mode, memoria[pc + 1]));
+                re = fetchOperand(mode, memoria[pc + 1]);
+                acc = (short) (acc / re);
                 pc += 2;
                 break;
             case 3: // LOAD
@@ -88,7 +90,8 @@ public class Vm {
                 pc += 2;
                 break;
             case 14: // MULT
-                acc = (short) (acc * fetchOperand(mode, memoria[pc + 1]));
+                re = fetchOperand(mode, memoria[pc + 1]);
+                acc = (short) (acc * re);
                 pc += 2;
                 break;
             case 12: // READ
@@ -100,18 +103,20 @@ public class Vm {
             case 11: // STOP
                 return false;
             case 7: // STORE
-                memoria[fetchOperand(mode, memoria[pc + 1])] = acc;
+                re = fetchOperand(mode, memoria[pc + 1]);
+                memoria[re] = acc;
                 pc += 2;
                 break;
             case 6: // SUB
-                acc = (short) (acc - fetchOperand(mode, memoria[pc + 1]));
+                re = fetchOperand(mode, memoria[pc + 1]);
+                acc = (short) (acc - re);
                 pc += 2;
                 break;
             case 8: // WRITE
                 break;
         }
-        if (pc > 1023) {
-            pc = 2;
+        if (pc > 1014) {
+            pc = 0;
         }
         return true;
     }

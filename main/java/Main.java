@@ -1,7 +1,7 @@
 // import static org.junit.jupiter.api.Assertions.assertEquals;
 
 // import org.junit.jupiter.api.Test;
-import javax.swing.SwingUtilities;
+// import javax.swing.SwingUtilities;
 public class Main {
   public static void main(String[] args) {
    /* System.out.println("Hello world!");
@@ -19,7 +19,7 @@ public class Main {
       3, 8,   // LOAD 0
       2, 9,   // ADD 1
       7, 9,   // STORE 2
-      11         // STOP
+      11      // STOP
   };
 
   // Carregar o programa na memória
