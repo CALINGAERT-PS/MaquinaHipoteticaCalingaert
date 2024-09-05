@@ -1,10 +1,13 @@
 import javax.swing.*;
 import java.awt.*;
 
-public class InterfaceGrafica {
-    public static void main(String[] args) {
+public class Interface {
+
+    private JFrame frame;
+    
+    public Interface() {
         // Criando a janela principal
-        JFrame frame = new JFrame("Simulador");
+        frame = new JFrame("Simulador");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Maximiza a janela
         frame.setMinimumSize(new Dimension(800, 600)); // Define o tamanho mínimo da janela
@@ -30,7 +33,6 @@ public class InterfaceGrafica {
         JButton runButton = new JButton("Run");
         JButton stepButton = new JButton("Step");
         JButton cleanButton = new JButton("Clean");
-
 
         c.insets = new Insets(10, 10, 10, 10); // Espaçamento entre os componentes
 
@@ -84,7 +86,9 @@ public class InterfaceGrafica {
         c.weighty = 0.3;
         c.fill = GridBagConstraints.BOTH;
         frame.add(registersPanel, c);
+    }
 
+    public void show() {
         // Exibindo a janela
         frame.setVisible(true);
     }
