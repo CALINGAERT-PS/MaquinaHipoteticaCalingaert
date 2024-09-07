@@ -1,3 +1,5 @@
+import java.util.Scanner;
+
 public class Vm {
     private short[] memory;
     private short[] stack;
@@ -9,6 +11,7 @@ public class Vm {
     private short re;
     private final int MEMORY_SIZE = 1014;
     private final int STACK_SIZE = 10;
+    private Scanner scan;
 
     public Vm() {
         this.memory = new short[MEMORY_SIZE];
@@ -19,6 +22,7 @@ public class Vm {
         this.mop = 0;
         this.ri = 0;
         this.re = 0;
+        this.scan = new Scanner(System.in);
     }
 
     private short fetchOperand(int mode, short operand) {
@@ -41,6 +45,18 @@ public class Vm {
         }
     }
 
+    public void clear() {
+        this.memory = new short[MEMORY_SIZE];
+        this.stack = new short[STACK_SIZE];
+        this.pc = 0;
+        this.sp = 0;
+        this.acc = 0;
+        this.mop = 0;
+        this.ri = 0;
+        this.re = 0;
+    }
+    
+
     public boolean executeInstruction() {
         ri = memory[pc];
         int opcode = ri & 0x1F;     // Bits 0 a 4 determinam o opcode
@@ -48,29 +64,34 @@ public class Vm {
 
         switch (opcode) {
             case 2: // ADD
-                acc += fetchOperand(mode, memory[pc + 1]);
+                re = fetchOperand(mode, memory[pc + 1]);
+                acc += re;
                 pc += 2;
                 break;
             case 0: // BR
-                pc = fetchOperand(mode, memory[pc + 1]);
+                re = fetchOperand(mode, memory[pc + 1]);
+                pc = re;
                 break;
             case 5: // BRNEG
                 if (acc < 0) {
-                    pc = fetchOperand(mode, memory[pc + 1]);
+                    re = fetchOperand(mode, memory[pc + 1]);
+                    pc = re;
                     break;
                 }
                 pc += 1;
                 break;
             case 1: // BRPOS
                 if (acc > 0) {
-                    pc = fetchOperand(mode, memory[pc + 1]);
+                    re = fetchOperand(mode, memory[pc + 1]);
+                    pc = re;
                     break;
                 }
                 pc += 1;
                 break;
             case 4: // BRZERO
                 if (acc == 0) {
-                    pc = fetchOperand(mode, memory[pc + 1]);
+                    re = fetchOperand(mode, memory[pc + 1]);
+                    pc = re;
                     break;
                 }
                 pc += 1;
@@ -81,12 +102,24 @@ public class Vm {
                     return false;
                 }
                 stack[sp] = pc;
-                pc = fetchOperand(mode, memory[pc + 1]);
+                re = fetchOperand(mode, memory[pc + 1]);
+                pc = re;
                 ++sp;
                 break;
             case 13: // COPY
-                re = fetchOperand(mode, memory[pc + 1]);
-                memory[re] = fetchOperand(mode, memory[pc + 2]);
+                int mode1 = (ri >> 5) & 0x1;
+                int mode2 = (ri >> 5) & 0x6;
+                if (mode1 == 0){
+                    mode1 = 4;
+                }
+                else if (mode1 == 1){
+                    mode1 = 0;
+                }
+                if (mode2 == 2){
+                    mode2 = 1;
+                }
+                re = fetchOperand(mode1, memory[pc + 1]);
+                memory[re] = fetchOperand(mode2, memory[pc + 2]);
                 pc += 3;
                 break;
             case 10: // DIVIDE
@@ -95,7 +128,8 @@ public class Vm {
                 pc += 2;
                 break;
             case 3: // LOAD
-                acc = fetchOperand(mode, memory[pc + 1]);
+                re = fetchOperand(mode, memory[pc + 1]);
+                acc = re;
                 pc += 2;
                 break;
             case 14: // MULT
@@ -104,6 +138,15 @@ public class Vm {
                 pc += 2;
                 break;
             case 12: // READ
+                short input = scan.nextShort();
+                if (mode == 0){
+                    mode = 4;
+                }
+                else if (mode == 1){
+                    mode = 0;
+                }
+                re = fetchOperand(mode, memory[pc + 1]);
+                memory[re] = input;
                 break;
             case 16: // RET
                 pc = stack[sp];
@@ -112,6 +155,12 @@ public class Vm {
             case 11: // STOP
                 return false;
             case 7: // STORE
+                if (mode == 0){
+                    mode = 4;
+                }
+                else if (mode == 1){
+                    mode = 0;
+                }
                 re = fetchOperand(mode, memory[pc + 1]);
                 memory[re] = acc;
                 pc += 2;
@@ -122,6 +171,9 @@ public class Vm {
                 pc += 2;
                 break;
             case 8: // WRITE
+                re = fetchOperand(mode, memory[pc + 1]);
+                pc += 2;
+                System.out.println(re);
                 break;
         }
         if (pc > 1014) {
