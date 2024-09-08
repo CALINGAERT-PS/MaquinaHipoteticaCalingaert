@@ -8,6 +8,7 @@ import java.io.IOException;
 
 public class Assembler {
     private HashMap<String, Short> symbolTable; // Tabela de Símbolos
+    private HashMap<String, Short> definitionTable; // Tabela de Definições
     private ArrayList<String> sourceLines; // Linhas do código fonte
     private ArrayList<String> objectCode; // Código objeto gerado
     private ArrayList<String> errors; // Lista de erros encontrados
@@ -16,6 +17,7 @@ public class Assembler {
 
     public Assembler() {
         symbolTable = new HashMap<>();
+        definitionTable = new HashMap<>();
         sourceLines = new ArrayList<>();
         objectCode = new ArrayList<>();
         errors = new ArrayList<>();
@@ -23,7 +25,7 @@ public class Assembler {
         hasError = false;
     }
 
-    // Método para carregar o código fonte de um arquivo
+
     public void loadSource(String filename) {
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             String line;
@@ -38,14 +40,15 @@ public class Assembler {
     }
 
     public void firstPass() {
+        locationCounter = 0;
+
         for (String line : sourceLines) {
             String[] tokens = line.trim().split("\\s+");
 
-            if (tokens.length == 0) continue; // Ignora linhas em branco
+            if (tokens.length == 0) continue; 
 
             int startIndex = 0;
 
-            // Se a linha tem um rótulo
             if (tokens[0].endsWith(":")) {
                 String label = tokens[0].substring(0, tokens[0].length() - 1);
                 if (symbolTable.containsKey(label)) {
@@ -53,16 +56,17 @@ public class Assembler {
                 } else {
                     symbolTable.put(label, locationCounter);
                 }
-                startIndex = 1; // A instrução começa após o rótulo
+                startIndex = 1;
             }
 
-            // Processa diretivas e instruções
             if (startIndex < tokens.length) {
-                if (tokens[startIndex].equalsIgnoreCase(".WORD")) {
+                String directive = tokens[startIndex].toUpperCase();
+                if (directive.equals(".WORD") || directive.equals("CONST")) {
                     if (tokens.length > startIndex + 1 && tokens[startIndex + 1].matches("\\d+")) {
-                        locationCounter += 1; // Tamanho de uma palavra
+                        definitionTable.put(tokens[startIndex + 1], locationCounter);
+                        locationCounter += 1; 
                     } else {
-                        reportError("Valor inválido para .WORD: " + (tokens.length > startIndex + 1 ? tokens[startIndex + 1] : ""));
+                        reportError("Valor inválido para " + directive + ": " + (tokens.length > startIndex + 1 ? tokens[startIndex + 1] : ""));
                     }
                 } else {
                     locationCounter += getInstructionSize(tokens, startIndex);
@@ -72,18 +76,17 @@ public class Assembler {
     }
 
     public void secondPass() {
-        locationCounter = 0; // Reseta o contador de localização para a segunda passagem
+        locationCounter = 0; 
 
         for (String line : sourceLines) {
             String[] tokens = line.trim().split("\\s+");
 
-            if (tokens.length == 0) continue; // Ignora linhas em branco
+            if (tokens.length == 0) continue; 
 
             int startIndex = 0;
 
-            // Ignorar rótulos na segunda passagem
             if (tokens[0].endsWith(":")) {
-                startIndex = 1; // A instrução começa após o rótulo
+                startIndex = 1; 
             }
 
             if (startIndex < tokens.length) {
@@ -112,7 +115,6 @@ public class Assembler {
             }
         }
     
-        // Continue com o código para gerar o object code para outras instruções
         int opcode = getOpcode(instruction);
         short operand = 0;
     
@@ -123,7 +125,7 @@ public class Assembler {
                 operand = Short.parseShort(tokens[startIndex + 1]);
             } else {
                 reportError("Símbolo não definido: " + tokens[startIndex + 1]);
-                symbolTable.put(tokens[startIndex + 1], (short) -1); // -1 ou outro valor que indica pendente
+                symbolTable.put(tokens[startIndex + 1], (short) -1); 
             }
         }
     
@@ -134,39 +136,26 @@ public class Assembler {
         if (tokens.length > startIndex + 1) {
             String operand = tokens[startIndex + 1].trim();
     
-            // Verifica se o operando é uma expressão do tipo A(SIMBOLO)
-            if (operand.startsWith("A(") && operand.endsWith(")")) {
-                String symbol = operand.substring(2, operand.length() - 1).trim();
-    
-                // Verifica se o símbolo está definido na tabela de símbolos
-                if (symbolTable.containsKey(symbol)) {
-                    short value = symbolTable.get(symbol);
-                    return String.format("%04X", value);
-                } else {
-                    reportError("Símbolo não definido: " + symbol);
-                    return "0000"; // Valor padrão em caso de erro
-                }
-            }
-    
-            // Se não for uma expressão, verifica se é um número literal ou um símbolo simples
+            // Verifica se o operando é um número literal
             if (operand.matches("\\d+")) {
                 return String.format("%04X", Short.parseShort(operand));
-            } else if (symbolTable.containsKey(operand)) {
-                short value = symbolTable.get(operand);
+            } 
+            // Verifica se o operando é um símbolo simples e está definido na tabela de definições
+            else if (definitionTable.containsKey(operand)) { 
+                short value = definitionTable.get(operand);
                 return String.format("%04X", value);
-            } else {
-                reportError("Valor inválido para CONST: " + operand);
-                return "0000";
+            } 
+            // Caso o símbolo não esteja definido
+            else {
+                reportError("Símbolo não definido ou valor inválido: " + operand);
+                return "0000"; 
             }
         } else {
-            reportError("Faltando operando para CONST");
-            return "0000";
+            reportError("Faltando operando para .WORD");
+            return "0000"; 
         }
     }
     
-    
-    
-
     private int getOpcode(String mnemonic) {
         switch (mnemonic.toUpperCase()) {
             case "ADD": return 2;
@@ -186,37 +175,35 @@ public class Assembler {
             case "SUB": return 6;
             case "WRITE": return 8;
             
-            // Adicionar suporte para pseudo-instruções
             case "START":
             case "END":
             case "INTDEF":
             case "INTUSE":
             case "CONST":
-                return 0; // ou outro valor apropriado, caso se aplique
+                return 0; 
     
             default:
                 reportError("Instrução inválida: " + mnemonic);
-                return -1; // Mantém o comportamento de erro para instruções inválidas
+                return -1; 
         }
     }
 
     private int getInstructionSize(String[] tokens, int startIndex) {
         if (tokens.length == 0 || startIndex >= tokens.length) {
-            return 0; // Nenhuma instrução
+            return 0; 
         }
     
         String instruction = tokens[startIndex].toUpperCase();
     
-        // Diretivas como .WORD geralmente ocupam uma palavra
         if (instruction.equals(".WORD") || instruction.equals("CONST")) {
-            return 1; // Diretiva que ocupa uma palavra
+            return 1; 
         }
 
-        // Para cada instrução, retornar o tamanho adequado
+        // Para cada instrução, retornar o tamanho
         switch (instruction) {
             case "STOP":
             case "RET":
-                return 1; // Instrucoes que ocupam 2 palavras
+                return 1; 
             case "BR":
             case "BRNEG":
             case "BRPOS":
@@ -230,9 +217,9 @@ public class Assembler {
             case "READ":
             case "WRITE":
             case "CALL":
-                return 2; // Instruções que ocupam 2 palavras (opcode + operando)
+                return 2; 
             case "COPY":
-                return 3; // Instrucoes que ocupam 3 palavras
+                return 3; 
             case "START":
             case "END":
             case "INTDEF":
@@ -241,7 +228,7 @@ public class Assembler {
 
             default:
                 reportError("Instrução desconhecida: " + instruction);
-                return 0; // Se não for uma instrução conhecida, retornar 0
+                return 0; 
         }
     }
 
@@ -276,22 +263,18 @@ public class Assembler {
 
     public static void main(String[] args) {
         Assembler assembler = new Assembler();
-
-        // Carrega o arquivo fonte fornecido como argumento
         assembler.loadSource("teste.ASM");
         assembler.firstPass();
         assembler.secondPass();
         assembler.generateOutput("output");
 
-        // Exibe os erros se houver algum
         if (assembler.hasError()) {
             for (String error : assembler.errors) {
                 System.out.println(error);
             }
         }
 
-        System.out.println(Collections.singletonList(assembler.symbolTable)); 
-        System.out.println(Collections.singletonList(assembler.sourceLines)); 
-        System.out.println(Collections.singletonList(assembler.objectCode)); 
+        System.out.println(Collections.singletonList(assembler.symbolTable));
+        System.out.println(Collections.singletonList(assembler.definitionTable));
     }
 }
