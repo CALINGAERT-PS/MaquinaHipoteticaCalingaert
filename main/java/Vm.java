@@ -64,34 +64,34 @@ public class Vm {
 
         switch (opcode) {
             case 2: // ADD
-                re = fetchOperand(mode, memory[pc + 1]);
-                acc += re;
+                re = memory[pc+1];
+                acc += fetchOperand(mode, re);
                 pc += 2;
                 break;
             case 0: // BR
-                re = fetchOperand(mode, memory[pc + 1]);
-                pc = re;
+                re = memory[pc+1];
+                pc = fetchOperand(mode, re);
                 break;
             case 5: // BRNEG
                 if (acc < 0) {
-                    re = fetchOperand(mode, memory[pc + 1]);
-                    pc = re;
+                    re = memory[pc+1];
+                    pc = fetchOperand(mode, re);
                     break;
                 }
                 pc += 1;
                 break;
             case 1: // BRPOS
                 if (acc > 0) {
-                    re = fetchOperand(mode, memory[pc + 1]);
-                    pc = re;
+                    re = memory[pc+1];
+                    pc = fetchOperand(mode, re);
                     break;
                 }
                 pc += 1;
                 break;
             case 4: // BRZERO
                 if (acc == 0) {
-                    re = fetchOperand(mode, memory[pc + 1]);
-                    pc = re;
+                    re = memory[pc+1];
+                    pc = fetchOperand(mode, re);
                     break;
                 }
                 pc += 1;
@@ -102,8 +102,8 @@ public class Vm {
                     return false;
                 }
                 stack[sp] = pc;
-                re = fetchOperand(mode, memory[pc + 1]);
-                pc = re;
+                re = memory[pc+1];
+                pc = fetchOperand(mode, re);
                 ++sp;
                 break;
             case 13: // COPY
@@ -118,23 +118,23 @@ public class Vm {
                 if (mode2 == 2){
                     mode2 = 1;
                 }
-                re = fetchOperand(mode1, memory[pc + 1]);
-                memory[re] = fetchOperand(mode2, memory[pc + 2]);
+                re = memory[pc+1];
+                memory[fetchOperand(mode, re)] = fetchOperand(mode2, memory[pc + 2]);
                 pc += 3;
                 break;
             case 10: // DIVIDE
-                re = fetchOperand(mode, memory[pc + 1]);
-                acc = (short) (acc / re);
+                re = memory[pc+1];
+                acc = (short) (acc / fetchOperand(mode, re));
                 pc += 2;
                 break;
             case 3: // LOAD
-                re = fetchOperand(mode, memory[pc + 1]);
-                acc = re;
+                re = memory[pc+1];
+                acc = fetchOperand(mode, re);
                 pc += 2;
                 break;
             case 14: // MULT
-                re = fetchOperand(mode, memory[pc + 1]);
-                acc = (short) (acc * re);
+                re = memory[pc+1];
+                acc = (short) (acc * fetchOperand(mode, re));
                 pc += 2;
                 break;
             case 12: // READ
@@ -145,8 +145,8 @@ public class Vm {
                 else if (mode == 1){
                     mode = 0;
                 }
-                re = fetchOperand(mode, memory[pc + 1]);
-                memory[re] = input;
+                re = memory[pc+1];
+                memory[fetchOperand(mode, re)] = input;
                 break;
             case 16: // RET
                 pc = stack[sp];
@@ -161,19 +161,19 @@ public class Vm {
                 else if (mode == 1){
                     mode = 0;
                 }
-                re = fetchOperand(mode, memory[pc + 1]);
-                memory[re] = acc;
+                re = memory[pc+1];
+                memory[fetchOperand(mode, re)] = acc;
                 pc += 2;
                 break;
             case 6: // SUB
-                re = fetchOperand(mode, memory[pc + 1]);
-                acc = (short) (acc - re);
+                re = memory[pc+1];
+                acc = (short) (acc - fetchOperand(mode, re));
                 pc += 2;
                 break;
             case 8: // WRITE
-                re = fetchOperand(mode, memory[pc + 1]);
+                re = memory[pc+1];  
                 pc += 2;
-                System.out.println(re);
+                System.out.println(fetchOperand(mode, re));
                 break;
         }
         if (pc > 1014) {
@@ -231,21 +231,6 @@ public class Vm {
     }
 
     public void run() {
-        // Depende da interface para terminar a implementação
-        switch (mop) {
-            case 0:
-                // (0) modo contínuo sem interação com a interface (visual) de operação
-                while (executeInstruction());
-                break;
-            case 1:
-                // (1) modo contínuo interagindo com a interface de operação a cada ciclo de instrução
-                while (executeInstruction());
-                break;
-            case 2:
-                // (2) modo de depuração (passo a passo) interagindo com a interface de operação, que
-                // proporciona a execução de apenas uma instrução a cada comando da interface.
-                while (executeInstruction());
-                break;
-        }
+        while (executeInstruction());
     }
 }
