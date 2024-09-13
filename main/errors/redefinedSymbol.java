@@ -1,4 +1,4 @@
-package java.errors
+package errors;
 
 public class redefinedSymbol extends Exception{
     public redefinedSymbol(String reason){

@@ -1,4 +1,4 @@
-package java.errors
+package errors;
 
 public class invalidDigit extends Exception{
     public invalidDigit(String reason){
