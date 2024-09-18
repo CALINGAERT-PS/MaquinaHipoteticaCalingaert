@@ -9,7 +9,7 @@ public class Vm {
     private byte mop;
     private short ri;
     private short re;
-    private final int MEMORY_SIZE = 1014;
+    private final int MEMORY_SIZE = 256;
     private final int STACK_SIZE = 10;
     private Scanner scan;
 
