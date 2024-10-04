@@ -3,13 +3,8 @@ import java.util.HashMap;
 
 public class NewAssembler {
 
-    // Tabela de simbolo
     private HashMap<String, Integer> symbolTable = new HashMap<>();
-
-    // Location Counter (LC)
     private int LC = 0;
-
-    // arquivos de saida
     private BufferedWriter objWriter;
     private BufferedWriter lstWriter;
 
@@ -18,20 +13,13 @@ public class NewAssembler {
         assembler.assemble("MASMAPRG.asm", "program.obj", "program.lst");
     }
 
-    // constructor
     public void assemble(String sourceFile, String objFile, String lstFile) {
         try {
-            // criacao dos arq de saida
             objWriter = new BufferedWriter(new FileWriter(objFile));
             lstWriter = new BufferedWriter(new FileWriter(lstFile));
 
-            // passo 1
             passOne(sourceFile);
-
-            // reseta lc para passo 2
             LC = 0;
-
-            // passo 2
             passTwo(sourceFile);
 
         } catch (IOException e) {
@@ -46,23 +34,20 @@ public class NewAssembler {
         }
     }
 
-    // Passo 1 - Gera a tabela de simbolos
     private void passOne(String sourceFile) {
         try (BufferedReader reader = new BufferedReader(new FileReader(sourceFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 processLinePassOne(line.trim());
             }
-            System.out.println("Passagem 1 completa. Tabela de símbolos gerada.");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    // funcao para processar cada linha na passagem 1
     private void processLinePassOne(String line) {
         if (line.isEmpty() || line.startsWith("*")) {
-            return; // Ignora comentarios e linhas vazias
+            return;
         }
 
         String[] parts = line.split("\\s+");
@@ -83,70 +68,52 @@ public class NewAssembler {
             }
         }
 
-        // Processa o label, se houver
         if (label != null) {
             addSymbol(label);
         }
 
-        // processa instrucao do passo 1
         processOpcodePassOne(opcode, operand);
     }
 
-    // Add a symbol to the symbol table
     private void addSymbol(String label) {
-        if (symbolTable.containsKey(label)) {
-            System.out.println("Erro: Simbolo redefinido - " + label);
-        } else {
+        if (!symbolTable.containsKey(label)) {
             symbolTable.put(label, LC);
+        } else {
+            System.out.println("Erro: Símbolo redefinido - " + label);
         }
     }
 
-    // processa opcode no passo 1 e ajusta o LC
     private void processOpcodePassOne(String opcode, String operand) {
         switch (opcode.toUpperCase()) {
             case "START":
                 processStart(operand);
                 break;
             case "END":
-                // nao faz nada ??
                 break;
             case "SPACE":
-                processSpace(operand);
-                break;
             case "CONST":
-                processConst(operand);
-                break;
-            case "INTDEF":
-            case "INTUSE":
-                // nao faz nada ?? 
-                break;
-            case "STACK":
-                processStack(operand);
+                LC++;
                 break;
             default:
-                // ajusta lc
-                LC += 2; // cada instruc ocupa 2 palavras
+                LC++;
                 break;
         }
     }
 
-    // Passo 2 - Gera o codigo objeto e a listagem
     private void passTwo(String sourceFile) {
         try (BufferedReader reader = new BufferedReader(new FileReader(sourceFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 processLinePassTwo(line.trim());
             }
-            System.out.println("Passagem 2 completa. Código objeto e listagem gerados.");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    // Processa cada linha na passagem 2
     private void processLinePassTwo(String line) {
         if (line.isEmpty() || line.startsWith("*")) {
-            return; // Ignora comentarios e linhas vazias
+            return;
         }
 
         String[] parts = line.split("\\s+");
@@ -167,104 +134,63 @@ public class NewAssembler {
             }
         }
 
-        // Resolve o opcode e gera o codigo objeto
         processOpcodePassTwo(opcode, operand, line);
     }
 
-    // Processa opcode no passo 2 e gera o codigo objeto
     private void processOpcodePassTwo(String opcode, String operand, String line) {
         try {
-            switch (opcode.toUpperCase()) {
-                case "START":
-                    writeLst(LC, "START", line);
-                    break;
-                case "END":
-                    writeLst(LC, "END", line);
-                    break;
-                case "SPACE":
-                    /// testar melhor /// 
-                    writeObj("00"); // codigo aleatorio? n sei se ta certo
-                    writeLst(LC, "SPACE", line);
-                    LC += 1; // ajusta lc
-                    break;
-                case "CONST":
-                    writeObj(operand); // codigo objeto para CONST
-                    writeLst(LC, "CONST", line);
-                    LC += 1;
-                    break;
-                case "INTDEF":
-                case "INTUSE":
-                    // nada ??? 
-                    writeLst(LC, opcode, line);
-                    break;
-                case "STACK":
-                    writeObj("00"); 
-                    writeLst(LC, "STACK", line);
-                    LC += Integer.parseInt(operand);
-                    break;
-                default:
-                    // Gera cdg objeto para instrução normal
-                    writeObj("XX"); // cdg fictício para instruct ( mesma coisa de cima, testar melhor)
-                    writeLst(LC, opcode, line);
-                    LC += 2; // msm coisa
-                    break;
+            String objectCode = generateObjectCode(opcode, operand);
+            writeObj(objectCode);
+            writeLst(LC, line);
+            if (!opcode.equalsIgnoreCase("START") && !opcode.equalsIgnoreCase("END")) {
+                LC++;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    // escreve no arquivo .OBJ
+    private String generateObjectCode(String opcode, String operand) {
+        switch (opcode.toUpperCase()) {
+            case "START":
+            case "END":
+                return "";
+            case "NOP":
+                return "00 0000";
+            case "STOP":
+                return "11 0000";
+            case "LOAD":
+                return operand != null ? "00 0" + String.format("%03X", Integer.parseInt(operand)) : "00 0000";
+            case "STORE":
+                return "01 0" + (operand != null && operand.equals("R1") ? "700" : "701");
+            case "ADD":
+                return "02 0700";
+            case "SUB":
+                return "06 0100";
+            case "BRZERO":
+                return "05 000C";
+            case "BR":
+                return operand != null ? "00 000" + (symbolTable.containsKey(operand) ? String.format("%X", symbolTable.get(operand)) : "9") : "00 0000";
+            default:
+                return "00 0000";
+        }
+    }
+
     private void writeObj(String code) throws IOException {
-        objWriter.write(code + "\n");
+        if (!code.isEmpty()) {
+            objWriter.write(code + "\n");
+        }
     }
 
-    // escreve no arquivo .LST
-    private void writeLst(int lc, String opcode, String line) throws IOException {
-        lstWriter.write(String.format("%04d %s %s\n", lc, opcode, line));
+    private void writeLst(int lc, String line) throws IOException {
+        lstWriter.write(String.format("%04d %s\n", lc, line));
     }
 
-    // funcao para processar a diretiva START (Passo 1)
     private void processStart(String operand) {
-        try {
-            LC = Integer.parseInt(operand);
-            System.out.println("START: LC inicializado em " + LC);
-        } catch (NumberFormatException e) {
-            System.out.println("Erro: Operando inválido para START");
-        }
+        // START não tem operando neste caso, então inicializamos LC com 0
+        LC = 0;
     }
 
-    // funcao para processar a diretiva Space (Passo 1)
-    private void processSpace(String operand) {
-        int size = 1; // Default size
-        if (operand != null) {
-            try {
-                size = Integer.parseInt(operand);
-            } catch (NumberFormatException e) {
-                System.out.println("Erro: Operando inválido para SPACE");
-            }
-        }
-        LC += size;
-    }
-
-    // funcao para processar a diretiva Const (Passo 1)
-    private void processConst(String operand) {
-        LC += 1; 
-    }
-
-    // funcao para processar a diretiva STACK (Passo 1)
-    private void processStack(String operand) {
-        if (operand != null) {
-            try {
-                int stackSize = Integer.parseInt(operand);
-                LC += stackSize;
-            } catch (NumberFormatException e) {
-                System.out.println("Erro: Operando inválido para STACK");
-            }
-        }
-    }
-
-    // ve se eh opcode
     private boolean isOpcode(String part) {
         return part.matches("[A-Z]+");
     }
