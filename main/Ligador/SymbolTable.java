@@ -1,26 +1,29 @@
 package Ligador;
 import java.util.HashMap;
 import java.util.Map;
-
 public class SymbolTable {
-    Map<String, Symbol> table;
+
+    private Map<String, Symbol> symbols;
 
     public SymbolTable() {
-        this.table = new HashMap<>();
+        this.symbols = new HashMap<>();
     }
 
-    // Adiciona um simbolo na tabela
     public void addSymbol(String name, Symbol symbol) {
-        table.put(name, symbol);
+        symbols.put(name, symbol);
     }
 
-    // Retorna um simbolo da tabela
+    public boolean containsSymbol(String name) {
+        return symbols.containsKey(name);
+    }
+
     public Symbol getSymbol(String name) {
-        return table.get(name);
+        return symbols.get(name);
     }
 
-    @Override
-    public String toString() {
-        return "SymbolTable{table=" + table + '}';
+    public Map<String, Symbol> getSymbols() {
+
+        return symbols;
+
     }
 }

@@ -15,7 +15,7 @@ public class NewAssembler {
 
     public static void main(String[] args) {
         NewAssembler assembler = new NewAssembler();
-        assembler.assemble("code.asm", "program.obj", "program.lst");
+        assembler.assemble("MASMAPRG.asm", "program.obj", "program.lst");
     }
 
     // constructor

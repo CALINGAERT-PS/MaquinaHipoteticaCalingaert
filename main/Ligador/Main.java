@@ -5,7 +5,7 @@ import java.io.IOException;
 public class Main {
     public static void main(String[] args) {
         try {
-            // Criação do ligador
+            // criacao do ligador
             Ligador linker = new Ligador();
 
             // Carregar segmentos do arquivo de entrada
@@ -17,7 +17,7 @@ public class Main {
             // Segunda passagem
             linker.secondPass();
 
-            // Gravar o arquivo de saída
+            // Gravar o arquivo de saida
             linker.writeLinkedSegmentsToFile("linked_output.obj");
 
             System.out.println("Ligação completa! Arquivo gerado: linked_output.obj");
