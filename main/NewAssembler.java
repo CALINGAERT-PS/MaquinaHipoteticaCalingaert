@@ -4,7 +4,7 @@ import java.util.HashMap;
 public class NewAssembler {
 
     private HashMap<String, Integer> symbolTable = new HashMap<>();
-    private int LC = 0;
+    private int LC = 0; // Contador de Localização
     private BufferedWriter objWriter;
     private BufferedWriter lstWriter;
 
@@ -18,9 +18,9 @@ public class NewAssembler {
             objWriter = new BufferedWriter(new FileWriter(objFile));
             lstWriter = new BufferedWriter(new FileWriter(lstFile));
 
-            passOne(sourceFile);
-            LC = 0;
-            passTwo(sourceFile);
+            passOne(sourceFile); // Primeira passagem para criar a tabela de símbolos
+            LC = 0; // Reinicia o LC para a segunda passagem
+            passTwo(sourceFile); // Segunda passagem para gerar o código de objeto e listagem
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -46,33 +46,35 @@ public class NewAssembler {
     }
 
     private void processLinePassOne(String line) {
-        if (line.isEmpty() || line.startsWith("*")) {
-            return;
+        if (line.isEmpty() || line.startsWith(";")) {
+            return; // Ignora linhas vazias ou comentários
         }
 
-        String[] parts = line.split("\\s+");
+        String[] parts = line.split("\\s+", 3);
         String label = null;
         String opcode;
         String operand = null;
 
-        if (!isOpcode(parts[0])) {
-            label = parts[0];
-            opcode = parts[1];
-            if (parts.length > 2) {
-                operand = parts[2];
+        // Verifica se a linha começa com um label
+        if (parts.length > 0) {
+            if (isOpcode(parts[0])) {
+                opcode = parts[0];
+                if (parts.length > 1) {
+                    operand = parts[1];
+                }
+            } else {
+                label = parts[0];
+                opcode = parts[1];
+                if (parts.length > 2) {
+                    operand = parts[2];
+                }
             }
-        } else {
-            opcode = parts[0];
-            if (parts.length > 1) {
-                operand = parts[1];
+
+            if (label != null && !label.isEmpty()) {
+                addSymbol(label);
             }
+            processOpcodePassOne(opcode);
         }
-
-        if (label != null) {
-            addSymbol(label);
-        }
-
-        processOpcodePassOne(opcode, operand);
     }
 
     private void addSymbol(String label) {
@@ -83,20 +85,11 @@ public class NewAssembler {
         }
     }
 
-    private void processOpcodePassOne(String opcode, String operand) {
-        switch (opcode.toUpperCase()) {
-            case "START":
-                processStart(operand);
-                break;
-            case "END":
-                break;
-            case "SPACE":
-            case "CONST":
-                LC++;
-                break;
-            default:
-                LC++;
-                break;
+    private void processOpcodePassOne(String opcode) {
+        if (opcode.equalsIgnoreCase("START")) {
+            LC = 0; // Inicia o endereço no início
+        } else if (!opcode.equalsIgnoreCase("END")) {
+            LC += 2; // Cada instrução ocupa 2 endereços
         }
     }
 
@@ -112,38 +105,40 @@ public class NewAssembler {
     }
 
     private void processLinePassTwo(String line) {
-        if (line.isEmpty() || line.startsWith("*")) {
-            return;
+        if (line.isEmpty() || line.startsWith(";")) {
+            return; // Ignora linhas vazias ou comentários
         }
 
-        String[] parts = line.split("\\s+");
+        String[] parts = line.split("\\s+", 3);
         String label = null;
-        String opcode;
+        String opcode = "";
         String operand = null;
 
-        if (!isOpcode(parts[0])) {
-            label = parts[0];
-            opcode = parts[1];
-            if (parts.length > 2) {
-                operand = parts[2];
+        // Verifica se a linha começa com um label
+        if (parts.length > 0) {
+            if (isOpcode(parts[0])) {
+                opcode = parts[0];
+                if (parts.length > 1) {
+                    operand = parts[1];
+                }
+            } else {
+                label = parts[0];
+                opcode = parts[1];
+                if (parts.length > 2) {
+                    operand = parts[2];
+                }
             }
-        } else {
-            opcode = parts[0];
-            if (parts.length > 1) {
-                operand = parts[1];
-            }
+            processOpcodePassTwo(opcode, operand, line);
         }
-
-        processOpcodePassTwo(opcode, operand, line);
     }
 
     private void processOpcodePassTwo(String opcode, String operand, String line) {
         try {
             String objectCode = generateObjectCode(opcode, operand);
             writeObj(objectCode);
-            writeLst(LC, line);
+            writeLst(LC, objectCode, line);
             if (!opcode.equalsIgnoreCase("START") && !opcode.equalsIgnoreCase("END")) {
-                LC++;
+                LC += 2; // Incrementa o LC após processar a instrução
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -152,28 +147,33 @@ public class NewAssembler {
 
     private String generateObjectCode(String opcode, String operand) {
         switch (opcode.toUpperCase()) {
-            case "START":
-            case "END":
-                return "";
             case "NOP":
-                return "00 0000";
+                return "00 0000"; // Representação para NOP
             case "STOP":
-                return "11 0000";
+                return "11 0000"; // Representação para STOP
             case "LOAD":
-                return operand != null ? "00 0" + String.format("%03X", Integer.parseInt(operand)) : "00 0000";
+                return "00 " + String.format("%03X", Integer.parseInt(operand)); // Operando deve ser decimal
             case "STORE":
-                return "01 0" + (operand != null && operand.equals("R1") ? "700" : "701");
+                if (operand.equalsIgnoreCase("R1")) {
+                    return "01 0700"; // Representação para STORE R1
+                } else if (operand.equalsIgnoreCase("R2")) {
+                    return "01 0701"; // Representação para STORE R2
+                }
+                break;
             case "ADD":
-                return "02 0700";
+                return "02 0700"; // Representação para ADD R1
             case "SUB":
-                return "06 0100";
+                return "06 0100"; // Representação para SUB
             case "BRZERO":
-                return "05 000C";
+                return "05 " + String.format("%04X", symbolTable.getOrDefault(operand, 0)); // Endereço relativo ao label
             case "BR":
-                return operand != null ? "00 000" + (symbolTable.containsKey(operand) ? String.format("%X", symbolTable.get(operand)) : "9") : "00 0000";
+                return "09 " + String.format("%04X", symbolTable.getOrDefault(operand, 0)); // Endereço relativo ao label
+            case "HALT":
+                return "00 0000"; // Representação para HALT (opcional, ajuste conforme necessário)
             default:
-                return "00 0000";
+                return "00 0000"; // Código padrão
         }
+        return "00 0000"; // Código padrão se opcode não for reconhecido
     }
 
     private void writeObj(String code) throws IOException {
@@ -182,13 +182,10 @@ public class NewAssembler {
         }
     }
 
-    private void writeLst(int lc, String line) throws IOException {
-        lstWriter.write(String.format("%04d %s\n", lc, line));
-    }
-
-    private void processStart(String operand) {
-        // START não tem operando neste caso, então inicializamos LC com 0
-        LC = 0;
+    private void writeLst(int lc, String objectCode, String line) throws IOException {
+        String address = String.format("%04X", lc);
+        String codePart = objectCode.isEmpty() ? "        " : objectCode;
+        lstWriter.write(String.format("%s    %-8s%s\n", address, codePart, line));
     }
 
     private boolean isOpcode(String part) {
