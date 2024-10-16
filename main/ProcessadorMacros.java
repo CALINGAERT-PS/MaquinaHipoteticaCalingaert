@@ -12,7 +12,7 @@ public class ProcessadorMacros {
     
     public static void main(String[] args) {
         HashMap<String, Macro> macros = new HashMap<String, Macro>();
-        String caminho = "main/programa.txt";
+        String caminho = "main/macros.txt";
         String output = "";
         boolean isMacro = false;
         boolean nameLinha = false;

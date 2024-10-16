@@ -1,0 +1,6 @@
+0000    00 0000 START   NOP                 ; Início do programa
+0000    00 0000 INIT    10, 20      ; Chamada da macro INIT para inicializar registradores
+0002    00 0000 INCREMENTA R1       ; Chamada da macro INCREMENTA para incrementar R1
+0004    00 0000 LOOP    R2, 5       ; Chamada da macro LOOP com o registrador R2 e valor 5
+0006    00 0000 HALT    STOP                ; Final do programa
+0008    00 0000 END                 ; Fim da montagem

@@ -10,7 +10,7 @@ public class NewAssembler {
 
     public static void main(String[] args) {
         NewAssembler assembler = new NewAssembler();
-        assembler.assemble("MASMAPRG.asm", "program.obj", "program.lst");
+        assembler.assemble("C:\\\\Users\\\\Christian\\\\Desktop\\\\Códigos 2024\\\\MaquinaHipoteticaCalingaert\\\\main\\\\MASMAPRG.asm", "program.obj", "program.lst");
     }
 
     public void assemble(String sourceFile, String objFile, String lstFile) {

@@ -1,7 +1,0 @@
-SEGMENT segment1
-INSTR 10
-INSTR 20
-SYMBOL label1 10 true true
-INSTR 00
-SYMBOL label2 20 true true
-INSTR 00
