@@ -1,0 +1,34 @@
+* Exemplo de um código que usa macros para ser processado pelo Macro-Processador
+
+START   NOP                 
+
+        MACRO   
+        INCREMENTA  &REG 
+        ADD     &REG        
+        MEND                
+
+        MACRO   
+        LOOP    &REG,&VAL    
+        LOAD    &VAL       
+        STORE   &REG        
+LOOP1   BRZERO  EXIT       
+        SUB     ONE        
+        STORE   &REG        
+        BR      LOOP1       
+EXIT    NOP                 
+        MEND               
+
+        MACRO   
+        INIT    &VAL1,&VAL2 
+        LOAD    &VAL1     
+        STORE   R1        
+        LOAD    &VAL2      
+        STORE   R2         
+        MEND               
+
+        INIT    10,20      
+        INCREMENTA R1      
+        LOOP    R2,5     
+
+HALT    STOP              
+        END            
