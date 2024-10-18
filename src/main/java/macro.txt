@@ -1,0 +1,14 @@
+START   VERIFICAMAIOR
+        MACRO
+        MAIORENTREDOISNUMEROS &VAL1, &VAL2, &END
+        LOAD &VAL1
+        SUB &VAL2
+        BRPOS MAIOR
+        LOAD &VAL2
+        BR FIM
+MAIOR   LOAD &VAL1
+FIM     STORE &END
+        MEND
+        MAIORENTREDOISNUMEROS 5#, 7#, 79
+        STOP
+        STACK   5
