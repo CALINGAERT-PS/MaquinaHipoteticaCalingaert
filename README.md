@@ -9,7 +9,6 @@ Repositório dedicado à disciplina de Programação de Sistemas, ministrada pel
 - Pedro Ravazolo
 - Samuel Starke
 - Vitor Colombo
-# Link Do Replit : https://replit.com/@sstarke1/MaquinaVirtual?v=1
 
 A interface conta com 3 botões:
 Step -> Executa um passo
