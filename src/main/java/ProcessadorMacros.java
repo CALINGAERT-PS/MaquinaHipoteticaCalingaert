@@ -4,11 +4,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
-/* 
-Arrumar definição aninhada
-*/
 public class ProcessadorMacros {
-    //private HashMap<String, String> macros;
     public ProcessadorMacros(){
 
     }
@@ -42,12 +38,7 @@ public class ProcessadorMacros {
                 }
                 //salva enquanto for um macro
                 else if (isMacro){
-                    /*
                     //definições aninhados
-                    if (linha.contains("MACRO")){
-                        isMacro = true;
-                        nameLinha = true;
-                    }*/
                     //sai do processo de macros
                     if (linha.contains("MEND")){
                         isMacro = false;

@@ -36,7 +36,6 @@ public class NewAssembler {
                     start = false;
                 }
                 if (start){
-                //Separar label operação operando comentario
                     String[] semComentario = linha.split(";", 2);
                     String[] linhaTratada = semComentario[0].split("\\s+", 2);
                     String label = linhaTratada[0];

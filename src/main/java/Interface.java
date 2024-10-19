@@ -86,8 +86,7 @@ public class Interface {
         memoryPanel.add(currentInstructionField,c);
         c.ipadx = 0;
         c.ipady = 0;    
-        // da pra repensar como ficou todos registradores, nao sei se gostei da forma q eles tão expostos no painel
-        // mas fodase ta funcional ,isso é dps
+       
         JPanel registersPanel = new JPanel();
         registersPanel.setBorder(BorderFactory.createTitledBorder("Registradores"));
         registersPanel.setLayout(new GridLayout(2, 2));
@@ -194,7 +193,7 @@ public class Interface {
                     try {
                         executeRun(arquivo1Field.getText(),arquivo2Field.getText());
                     } catch (IOException e1) {
-                        // TODO Auto-generated catch block
+
                         e1.printStackTrace();
                     }
                 }
@@ -251,7 +250,7 @@ public class Interface {
     public void show() {
         frame.setVisible(true);
     }
-    // retorna string com o nome da instrução, tem que fazer um check se ta bem certinho dps
+    // retorna string com o nome da instrução
     public String getCurrentInstruction(){
         return switch (vm.getRi()) {
             case 2 -> "ADD";
@@ -287,9 +286,7 @@ public class Interface {
         mopField.setText(String.valueOf(vm.getMop()));
         reField.setText(String.valueOf(vm.getRe()));
         riField.setText(String.valueOf(vm.getRi()));
-        // Ta mostrando a ultima instrução executada, não sei se mantemos assim depois ou se mudamos para mostrar a que será executada depois, da pra mostrar as 2 tb
-        // Ta meio cagada essa função ai retornando a string com o nome nao sei se gostei da solução q eu fiz, deve ter um jeito melhor
-        // o endereço da execução ta completamente errado, tem que ver como puxar o endereço certinho, eu acho que tem que mexer na VM
+
         if(getCurrentInstruction().equals("STOP")){
             currentInstructionField.setText(getCurrentInstruction());
         }else{
